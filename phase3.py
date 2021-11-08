@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # find the sponsors of phase3 clinical trials in the recruiting stage
+# usage: phase3.py "search terms"
 # from https://clinicaltrials.gov/ct2/results?
 # search terms:cond=Infectious+Disease&term=&cntry=&state=&city=&dist=&recrs=a&phase=2
 
@@ -13,6 +14,8 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.common.by import By
 
 def replacecom(alist):
     blist=[]
@@ -22,10 +25,11 @@ def replacecom(alist):
 
 def source(ds):
     ur = "https://clinicaltrials.gov/ct2/results?cond="+ds+"&term=&cntry=&state=&city=&dist=&recrs=a&phase=2"
-    driver = webdriver.Firefox(executable_path=r'C:\Program Files (x86)\geckodriver.exe')
+    s=Service("c:\Program Files (x86)\geckodriver.exe")
+    driver = webdriver.Firefox(service=s)
     driver.implicitly_wait(30)
     driver.get(ur)
-    ddelement= Select(driver.find_element_by_name('theDataTable_length')) #set number of entries on the page
+    ddelement= Select(driver.find_element(By.NAME, 'theDataTable_length')) #set number of entries on the page
     ddelement.select_by_visible_text('100')
     time.sleep(10)
     sumDv=BeautifulSoup(driver.page_source, 'lxml')
@@ -46,7 +50,7 @@ def scraper(row):
         return(replacecom([ttl, sponsor, parties, strt, primary, complete]))       
 
 def turnPage(driver, rows):
-    driver.find_element_by_xpath('//*[@id="theDataTable_next"]').click() #click next page
+    driver.find_element(By.XPATH,'//*[@id="theDataTable_next"]').click() #click next page
     time.sleep(10)
     sumDv=BeautifulSoup(driver.page_source, 'lxml')                         #load next page
     rows=sumDv.find('table', {'id':'theDataTable'}).tbody.find_all('a', href=True) #find a with link
